@@ -4,12 +4,14 @@ import {
   TextInput,
   TouchableOpacity,
   Image,
-  Alert,
   Animated,
   Pressable,
 } from "react-native";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "expo-router";
+import { theme } from "@/constants/theme"; // Import the theme
+
+const colors = theme.dark; // Use dark theme colors
 
 export default function ForgotPasswordScreen() {
   const router = useRouter();
@@ -18,7 +20,6 @@ export default function ForgotPasswordScreen() {
   const logoOpacity = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    // Fade-in logo
     Animated.timing(logoOpacity, {
       toValue: 1,
       duration: 800,
@@ -34,24 +35,13 @@ export default function ForgotPasswordScreen() {
     setEmailError("");
 
     // Simulate sending reset link
-    // Alert.alert(
-    //   "Password Reset",
-    //   "A reset link has been sent to your email ."
-    // );
-
-    // Optional: clear input
     setEmail("");
 
-    // router.push({
-    //   pathname: "./(auth)/reset-password",
-    //   params: { email }, // optional, or token if you have one
-    // });
     router.push("/(auth)/reset-password");
-
   };
 
   return (
-    <View className="flex-1 justify-center px-6 bg-[#000000]">
+    <View style={{ flex: 1, justifyContent: "center", paddingHorizontal: 24, backgroundColor: colors.background }}>
       {/* Logo */}
       <Animated.View
         style={{ opacity: logoOpacity, alignItems: "center", marginBottom: 24 }}
@@ -62,41 +52,54 @@ export default function ForgotPasswordScreen() {
         />
       </Animated.View>
 
-      <Text className="text-3xl font-bold text-white text-center mb-8">
+      <Text style={{ fontSize: 28, fontWeight: "bold", color: colors.onSurface, textAlign: "center", marginBottom: 32 }}>
         Forgot Password
       </Text>
 
       {/* Email Input */}
       <TextInput
-        className="bg-[#171717] text-white rounded-md p-4 mb-1"
+        style={{
+          backgroundColor: colors.surface,
+          color: colors.onSurface,
+          borderRadius: 8,
+          padding: 16,
+          marginBottom: 4,
+        }}
         placeholder="Enter your email"
-        placeholderTextColor="#C5BFBF"
+        placeholderTextColor={colors.onSurfaceVariant}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
       />
       {emailError ? (
-        <Text className="text-red-400 mb-4">{emailError}</Text>
+        <Text style={{ color: colors.error, marginBottom: 16 }}>{emailError}</Text>
       ) : (
-        <View className="mb-4" />
+        <View style={{ marginBottom: 16 }} />
       )}
 
       {/* Reset Button */}
       <TouchableOpacity
         onPress={handleResetPassword}
-        className="bg-[#0c0c0c] py-4 rounded-md mb-4 active:opacity-80"
+        style={{
+          backgroundColor: colors.primary,
+          paddingVertical: 16,
+          borderRadius: 8,
+          marginBottom: 16,
+        }}
       >
-        <Text className="text-center text-white font-bold text-lg">
+        <Text style={{ textAlign: "center", color: colors.onSurface, fontWeight: "bold", fontSize: 18 }}>
           Reset Password
         </Text>
       </TouchableOpacity>
 
       {/* Back to Login */}
       <Pressable onPress={() => router.push("./(auth)/login")}>
-        <Text className="text-center text-gray-300 mt-2">
+        <Text style={{ textAlign: "center", color: colors.onSurfaceVariant, marginTop: 8 }}>
           Remembered your password?{" "}
-          <Text className="text-white font-semibold underline">Login</Text>
+          <Text style={{ color: colors.onSurface, fontWeight: "600", textDecorationLine: "underline" }}>
+            Login
+          </Text>
         </Text>
       </Pressable>
     </View>

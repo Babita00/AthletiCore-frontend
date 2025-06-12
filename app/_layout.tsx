@@ -52,19 +52,24 @@ function RootLayoutNav() {
   const router = useRouter();
   const { user } = useAuth(); // from your context
 
- useEffect(() => {
-    const inAuthGroup = segments[0] === "(auth)";
-    // Add a tiny delay to ensure Slot is mounted
-    const timeout = setTimeout(() => {
-      if (!user && !inAuthGroup) {
-        router.replace("/(auth)");
-      } else if (user && inAuthGroup) {
-        router.replace("./(tabs)/events");
-      }
-    }, 0);
+useEffect(() => {
+  const inAuthGroup = segments[0] === "(auth)";
 
-    return () => clearTimeout(timeout);
-  }, [segments, user]);
+  const timeout = setTimeout(() => {
+    if (!user && !inAuthGroup) {
+      router.replace("/(auth)");
+    } else if (user && inAuthGroup) {
+      if (user.role === "official") {
+        router.replace("/(official)/dashboard");
+      } else {
+        router.replace("/(tabs)/events");
+      }
+    }
+  }, 0);
+
+  return () => clearTimeout(timeout);
+}, [segments, user]);
+
 
 
   return (
