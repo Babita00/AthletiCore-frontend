@@ -12,6 +12,10 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Feather } from "@expo/vector-icons";
+import { theme } from "@/constants/theme";
+
+const colors = theme.dark;
+
 interface FormData {
   fullName: string;
   email: string;
@@ -47,7 +51,9 @@ const SignUpPage: React.FC = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showGenderDropdown, setShowGenderDropdown] = useState(false);
 
-  const roles = ["Player", "Organizer", "Judge/Official"];
+  // const roles = ["Player", "Organizer", "Judge/Official"];
+    const roles = ["Player", "Official"];
+
   const genders = ["Male", "Female", "Other"];
 
   const handleInputChange = (field: FormField, value: string) => {
@@ -65,18 +71,10 @@ const SignUpPage: React.FC = () => {
   };
 
   const handleNext = async () => {
-    // Validation
     const { fullName, email, password, confirmPassword, role, contactNumber } =
       formData;
 
-    if (
-      !fullName ||
-      !email ||
-      !password ||
-      !confirmPassword ||
-      !role ||
-      !contactNumber
-    ) {
+    if (!fullName || !email || !password || !confirmPassword || !role || !contactNumber) {
       Alert.alert("Missing Fields", "Please fill in all required fields.");
       return;
     }
@@ -92,239 +90,170 @@ const SignUpPage: React.FC = () => {
     }
 
     try {
-      // Simulated signup logic - replace with API call
       console.log("Sign Up Data:", formData);
-
-      // Redirect to login
       Alert.alert("Success", "Account created successfully.");
-      router.push("./(auth)/index");
+      router.push("/(auth)");
     } catch (error) {
       Alert.alert("Error", "Something went wrong. Please try again.");
     }
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#171717]">
-      <ScrollView className="flex-1 px-6" showsVerticalScrollIndicator={false}>
-        <View className="items-center mt-12 mb-6">
-          <Text className="text-white text-2xl font-bold">Create Account</Text>
-        </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
+      <ScrollView
+        contentContainerStyle={{ padding: 20, paddingBottom: 40 }}
+        showsVerticalScrollIndicator={false}
+      >
+        <Text style={{ fontSize: 24, color: colors.onSurface, fontWeight: "bold", marginTop: 40, marginBottom: 20 }}>
+          Create Account
+        </Text>
 
-        {/* Full Name */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-300 mb-2">
-            Full Name
-          </Text>
-          <TextInput
-            className="bg-[#171717] text-white rounded-md p-4"
-            placeholder="Enter your full name"
-            placeholderTextColor="#C5BFBF"
-            value={formData.fullName}
-            onChangeText={(text) => handleInputChange("fullName", text)}
-          />
-        </View>
-
-        {/* Email */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-300 mb-2">Email</Text>
-          <TextInput
-            className="bg-[#171717] text-white rounded-md p-4"
-            placeholder="Enter your email"
-            placeholderTextColor="#C5BFBF"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            value={formData.email}
-            onChangeText={(text) => handleInputChange("email", text)}
-          />
-        </View>
-
-        {/* Phone Number */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-300 mb-2">
-            Phone Number
-          </Text>
-          <TextInput
-            className="bg-[#171717] text-white rounded-md p-4"
-            placeholder="Enter your phone number"
-            placeholderTextColor="#C5BFBF"
-            keyboardType="phone-pad"
-            value={formData.contactNumber}
-            onChangeText={(text) => handleInputChange("contactNumber", text)}
-          />
-        </View>
+        {/* Form Field */}
+        {[
+          { label: "Full Name", key: "fullName", keyboard: "default" },
+          { label: "Email", key: "email", keyboard: "email-address" },
+          { label: "Phone Number", key: "contactNumber", keyboard: "phone-pad" },
+        ].map((field) => (
+          <View key={field.key} style={styles.inputGroup}>
+            <Text style={styles.label}>{field.label}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={`Enter your ${field.label.toLowerCase()}`}
+              placeholderTextColor={colors.onSurfaceVariant}
+              keyboardType={field.keyboard as any}
+              autoCapitalize="none"
+              value={formData[field.key as FormField]}
+              onChangeText={(text) => handleInputChange(field.key as FormField, text)}
+            />
+          </View>
+        ))}
 
         {/* Role Dropdown */}
-        <View className="mb-6 relative">
-          <Text className="text-sm font-medium text-gray-300 mb-2">Role</Text>
-          <TouchableOpacity
-            className="bg-[#171717] border border-gray-600 rounded-md px-4 py-3 flex-row justify-between items-center"
-            onPress={() => setShowRoleDropdown(!showRoleDropdown)}
-          >
-            <Text
-              className={`text-base ${
-                formData.role ? "text-white" : "text-gray-400"
-              }`}
-            >
-              {formData.role || "Select your role"}
-            </Text>
-            <Text className="text-white ml-2">
-              {showRoleDropdown ? "▲" : "▼"}
-            </Text>
-          </TouchableOpacity>
-
-          {showRoleDropdown && (
-            <View className="absolute top-[72px] left-0 right-0 bg-[#1F1F1F] rounded-md border border-gray-600 z-50">
-              {roles.map((role, index) => (
-                <TouchableOpacity
-                  key={role}
-                  className={`px-4 py-3 ${
-                    index < roles.length - 1 ? "border-b border-gray-700" : ""
-                  }`}
-                  onPress={() => handleRoleSelect(role)}
-                >
-                  <Text className="text-white text-base">{role}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
-        </View>
+        <Text style={styles.label}>Role</Text>
+        <TouchableOpacity
+          style={styles.dropdown}
+          onPress={() => setShowRoleDropdown(!showRoleDropdown)}
+        >
+          <Text style={styles.dropdownText}>
+            {formData.role || "Select your role"}
+          </Text>
+          <Text style={{ color: colors.onSurface }}>{showRoleDropdown ? "▲" : "▼"}</Text>
+        </TouchableOpacity>
+        {showRoleDropdown && (
+          <View style={styles.dropdownList}>
+            {roles.map((role, idx) => (
+              <TouchableOpacity
+                key={role}
+                style={[styles.dropdownItem, idx !== roles.length - 1 && styles.borderBottom]}
+                onPress={() => handleRoleSelect(role)}
+              >
+                <Text style={{ color: colors.onSurface }}>{role}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         {/* Conditional Fields for Player */}
         {formData.role === "Player" && (
           <>
-            {/* Gender Dropdown */}
-            <View className="mb-6 relative">
-              <Text className="text-sm font-medium text-gray-300 mb-2">
-                Gender
+            {/* Gender */}
+            <Text style={styles.label}>Gender</Text>
+            <TouchableOpacity
+              style={styles.dropdown}
+              onPress={() => setShowGenderDropdown(!showGenderDropdown)}
+            >
+              <Text style={styles.dropdownText}>
+                {formData.gender || "Select your gender"}
               </Text>
-              <TouchableOpacity
-                className="bg-[#171717] border border-gray-600 rounded-md px-4 py-3 flex-row justify-between items-center"
-                onPress={() => setShowGenderDropdown(!showGenderDropdown)}
-              >
-                <Text
-                  className={`text-base ${
-                    formData.gender ? "text-white" : "text-gray-400"
-                  }`}
-                >
-                  {formData.gender || "Select your gender"}
-                </Text>
-                <Text className="text-white ml-2">
-                  {showGenderDropdown ? "▲" : "▼"}
-                </Text>
-              </TouchableOpacity>
+              <Text style={{ color: colors.onSurface }}>{showGenderDropdown ? "▲" : "▼"}</Text>
+            </TouchableOpacity>
+            {showGenderDropdown && (
+              <View style={styles.dropdownList}>
+                {genders.map((gender, idx) => (
+                  <TouchableOpacity
+                    key={gender}
+                    style={[styles.dropdownItem, idx !== genders.length - 1 && styles.borderBottom]}
+                    onPress={() => handleGenderSelect(gender)}
+                  >
+                    <Text style={{ color: colors.onSurface }}>{gender}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
 
-              {showGenderDropdown && (
-                <View className="absolute top-[72px] left-0 right-0 bg-[#1F1F1F] rounded-md border border-gray-600 z-50">
-                  {genders.map((gender, index) => (
-                    <TouchableOpacity
-                      key={gender}
-                      className={`px-4 py-3 ${
-                        index < genders.length - 1
-                          ? "border-b border-gray-700"
-                          : ""
-                      }`}
-                      onPress={() => handleGenderSelect(gender)}
-                    >
-                      <Text className="text-white text-base">{gender}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              )}
-            </View>
-
-            {/* Weight */}
-            <View className="mb-6">
-              <Text className="text-sm font-medium text-gray-300 mb-2">
-                Weight
-              </Text>
-              <TextInput
-                className="bg-[#171717] border border-gray-600 rounded-md px-4 py-3 text-white"
-                placeholder="Enter your weight"
-                placeholderTextColor="#C5BFBF"
-                keyboardType="numeric"
-                value={formData.weight}
-                onChangeText={(text) => handleInputChange("weight", text)}
-              />
-            </View>
-
-            {/* Age */}
-            <View className="mb-6">
-              <Text className="text-sm font-medium text-gray-300 mb-2">
-                Age
-              </Text>
-              <TextInput
-                className="bg-[#171717] border border-gray-600 rounded-md px-4 py-3 text-white"
-                placeholder="Enter your age"
-                placeholderTextColor="#C5BFBF"
-                keyboardType="numeric"
-                value={formData.age}
-                onChangeText={(text) => handleInputChange("age", text)}
-              />
-            </View>
+            {/* Weight + Age */}
+            {["weight", "age"].map((key) => (
+              <View key={key} style={styles.inputGroup}>
+                <Text style={styles.label}>{key === "weight" ? "Weight" : "Age"}</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder={`Enter your ${key}`}
+                  placeholderTextColor={colors.onSurfaceVariant}
+                  keyboardType="numeric"
+                  value={formData[key as FormField]}
+                  onChangeText={(text) => handleInputChange(key as FormField, text)}
+                />
+              </View>
+            ))}
           </>
         )}
 
-        {/* Password */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-300 mb-2">
-            Password
-          </Text>
-          <TextInput
-            className="bg-[#171717] text-white rounded-md p-4"
-            placeholder="Enter your password"
-            placeholderTextColor="#C5BFBF"
-            secureTextEntry
-            value={formData.password}
-            onChangeText={(text) => handleInputChange("password", text)}
-          />
-        </View>
+        {/* Password Fields */}
+        {["password", "confirmPassword"].map((key, idx) => (
+          <View key={key} style={styles.inputGroup}>
+            <Text style={styles.label}>{idx === 0 ? "Password" : "Confirm Password"}</Text>
+            <TextInput
+              style={styles.input}
+              placeholder={idx === 0 ? "Enter your password" : "Re-enter your password"}
+              placeholderTextColor={colors.onSurfaceVariant}
+              secureTextEntry
+              value={formData[key as FormField]}
+              onChangeText={(text) => handleInputChange(key as FormField, text)}
+            />
+          </View>
+        ))}
 
-        {/* Confirm Password */}
-        <View className="mb-4">
-          <Text className="text-sm font-medium text-gray-300 mb-2">
-            Confirm Password
-          </Text>
-          <TextInput
-            className="bg-[#171717] text-white rounded-md p-4"
-            placeholder="Re-enter your password"
-            placeholderTextColor="#C5BFBF"
-            secureTextEntry
-            value={formData.confirmPassword}
-            onChangeText={(text) => handleInputChange("confirmPassword", text)}
-          />
-        </View>
-
+        {/* Terms & Agreement */}
         <TouchableOpacity
           onPress={() => setAgreedToTerms(!agreedToTerms)}
-          className="flex-row items-center mb-4"
+          style={{ flexDirection: "row", alignItems: "center", marginBottom: 20 }}
         >
           <View
-            className={`w-5 h-5 rounded-sm border-2 mr-2 items-center justify-center ${
-              agreedToTerms ? "border-white bg-white " : "border-gray-400"
-            }`}
+            style={{
+              width: 20,
+              height: 20,
+              borderWidth: 2,
+              borderColor: agreedToTerms ? colors.primary : colors.border,
+              backgroundColor: agreedToTerms ? colors.primary : "transparent",
+              alignItems: "center",
+              justifyContent: "center",
+              marginRight: 10,
+            }}
           >
-            {agreedToTerms && <Feather name="check" size={12} color="black" />}
+            {agreedToTerms && <Feather name="check" size={12} color="#fff" />}
           </View>
-          <Text className="text-white">
-            I agree to the Terms and Conditions
-          </Text>
+          <Text style={{ color: colors.onSurface }}>I agree to the Terms and Conditions</Text>
         </TouchableOpacity>
 
         {/* Sign Up Button */}
         <TouchableOpacity
           onPress={handleNext}
-          className="bg-[#0c0c0c] py-4 rounded-md mb-4 active:opacity-80"
+          style={{
+            backgroundColor: colors.primary,
+            paddingVertical: 16,
+            borderRadius: 8,
+            marginBottom: 16,
+          }}
         >
-          <Text className="text-center text-white font-bold text-lg">
+          <Text style={{ color: "#fff", textAlign: "center", fontSize: 16, fontWeight: "bold" }}>
             Sign Up
           </Text>
         </TouchableOpacity>
 
-        {/* Login Link */}
-        <Pressable onPress={() => router.push("./(auth)/index")}>
-          <Text className="text-center text-gray-300 mt-2 mb-14">
-            Already have an account?{" "}
-            <Text className="text-white font-semibold underline">Login</Text>
+        {/* Login Redirect */}
+        <Pressable onPress={() => router.push("/(auth)")}>
+          <Text style={{ textAlign: "center", color: colors.secondary }}>
+            Already have an account? <Text style={{ color: colors.accent }}>Login</Text>
           </Text>
         </Pressable>
       </ScrollView>
@@ -332,4 +261,236 @@ const SignUpPage: React.FC = () => {
   );
 };
 
+const styles = StyleSheet.create({
+  inputGroup: { marginBottom: 20 },
+  label: {
+    color: colors.onSurfaceVariant,
+    fontSize: 14,
+    marginBottom: 6,
+  },
+  input: {
+    backgroundColor: colors.surface,
+    color: colors.onSurface,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  dropdown: {
+    backgroundColor: colors.surface,
+    borderRadius: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  dropdownText: {
+    fontSize: 16,
+    color: colors.onSurface,
+  },
+  dropdownList: {
+    backgroundColor: colors.surfaceVariant,
+    borderRadius: 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 20,
+  },
+  dropdownItem: {
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  borderBottom: {
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+});
+
 export default SignUpPage;
+
+// -----If we have backend API--------//
+// import {
+//   View,
+//   Text,
+//   TextInput,
+//   Pressable,
+//   Alert,
+//   TouchableOpacity,
+//   Animated,
+// } from "react-native";
+// import { useRouter } from "expo-router";
+// import { useAuth } from "@/context/auth-context";
+// import { useEffect, useRef, useState } from "react";
+// import Feather from "react-native-vector-icons/Feather";
+// import AsyncStorage from "@react-native-async-storage/async-storage";
+// import axios from "axios";
+
+// // Optional: Replace with your API base URL
+// const API_URL = "https://your-api.com/api";
+
+// export default function SignInScreen() {
+//   const router = useRouter();
+//   const { login } = useAuth();
+
+//   const [email, setEmail] = useState("");
+//   const [password, setPassword] = useState("");
+//   const [showPassword, setShowPassword] = useState(false);
+//   const [rememberMe, setRememberMe] = useState(false);
+//   const [emailError, setEmailError] = useState("");
+//   const [passwordError, setPasswordError] = useState("");
+
+//   const logoOpacity = useRef(new Animated.Value(0)).current;
+
+//   useEffect(() => {
+//     Animated.timing(logoOpacity, {
+//       toValue: 1,
+//       duration: 800,
+//       useNativeDriver: true,
+//     }).start();
+
+//     (async () => {
+//       const savedEmail = await AsyncStorage.getItem("rememberedEmail");
+//       if (savedEmail) {
+//         setEmail(savedEmail);
+//         setRememberMe(true);
+//       }
+//     })();
+//   }, []);
+
+//   const handleLogin = async () => {
+//     setEmailError("");
+//     setPasswordError("");
+
+//     if (!email.includes("@")) {
+//       setEmailError("Enter a valid email address.");
+//       return;
+//     }
+//     if (password.length < 4) {
+//       setPasswordError("Password must be at least 4 characters.");
+//       return;
+//     }
+
+//     try {
+//       const response = await axios.post(`${API_URL}/login`, {
+//         email,
+//         password,
+//       });
+
+//       const { name, email: userEmail, role, token } = response.data;
+
+//       // Save token
+//       await AsyncStorage.setItem("authToken", token);
+
+//       // Remember email if selected
+//       if (rememberMe) {
+//         await AsyncStorage.setItem("rememberedEmail", userEmail);
+//       } else {
+//         await AsyncStorage.removeItem("rememberedEmail");
+//       }
+
+//       // Update auth context
+//       login({
+//         name,
+//         email: userEmail,
+//         role,
+//       });
+
+//       // Navigate based on role
+//       if (role === "official") {
+//         router.replace("/(official)/dashboard");
+//       } else {
+//         router.replace("/(tabs)/events");
+//       }
+
+//     } catch (error: any) {
+//       const message = error.response?.data?.message || "Invalid credentials";
+//       Alert.alert("Login Failed", message);
+//     }
+//   };
+
+//   return (
+//     <View className="flex-1 justify-center px-6 bg-[#000000]">
+//       <Text className="text-3xl font-bold text-white text-center mb-8">
+//         Welcome To Athleticore
+//       </Text>
+//       <Text className="text-3xl font-bold text-white text-center mb-8">
+//         Login Page
+//       </Text>
+
+//       {/* Email */}
+//       <TextInput
+//         className="bg-[#171717] text-white rounded-md p-4 mb-1"
+//         placeholder="Email"
+//         placeholderTextColor="#C5BFBF"
+//         value={email}
+//         onChangeText={setEmail}
+//         keyboardType="email-address"
+//         autoCapitalize="none"
+//       />
+//       {emailError ? (
+//         <Text className="text-red-400 mb-2">{emailError}</Text>
+//       ) : (
+//         <View className="mb-2" />
+//       )}
+
+//       {/* Password */}
+//       <View className="flex-row items-center bg-[#171717] rounded-md px-4 mb-1">
+//         <TextInput
+//           className="flex-1 text-white py-4"
+//           placeholder="Password"
+//           placeholderTextColor="#C5BFBF"
+//           value={password}
+//           onChangeText={setPassword}
+//           secureTextEntry={!showPassword}
+//         />
+//         <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
+//           <Feather
+//             name={showPassword ? "eye-off" : "eye"}
+//             size={20}
+//             color="#C5BFBF"
+//           />
+//         </TouchableOpacity>
+//       </View>
+//       {passwordError ? (
+//         <Text className="text-red-400 mb-2">{passwordError}</Text>
+//       ) : (
+//         <View className="mb-2" />
+//       )}
+
+//       {/* Remember Me + Forgot Password */}
+//       <View className="flex-row justify-between items-center mb-6">
+//         <TouchableOpacity
+//           onPress={() => setRememberMe(!rememberMe)}
+//           className="px-4 py-2 bg-[#211c1c] rounded-md"
+//         >
+//           <Text className="text-white font-semibold">Remember Me</Text>
+//         </TouchableOpacity>
+
+//         <Pressable onPress={() => router.push("/(auth)/forgot-password")}>
+//           <Text className="text-white font-semibold">Forgot Password</Text>
+//         </Pressable>
+//       </View>
+
+//       {/* Login Button */}
+//       <TouchableOpacity
+//         onPress={handleLogin}
+//         className="bg-[#0c0c0c] py-4 rounded-md mb-4 active:opacity-80"
+//       >
+//         <Text className="text-center text-white font-bold text-lg">Login</Text>
+//       </TouchableOpacity>
+
+//       {/* Sign Up */}
+//       <Pressable onPress={() => router.push("/(auth)/register")}>
+//         <Text className="text-center text-gray-300 mt-2">
+//           Don’t have an account?{" "}
+//           <Text className="text-white font-semibold underline">Sign Up</Text>
+//         </Text>
+//       </Pressable>
+//     </View>
+//   );
+// }
+// -----If we have backend API--------//
