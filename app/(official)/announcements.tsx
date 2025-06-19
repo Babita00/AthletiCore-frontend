@@ -34,18 +34,24 @@ const AVAILABLE_PLATES = [
   { weight: 0.25, image: require('../../assets/weights/0.25kg.png') },
 ];
 
+const COLLAR_IMAGE = require('../../assets/weights/2.5kgcollar.png');
+const BARBELL_IMAGE = require('../../assets/weights/Barbell.png');
+
+
 export default function BarbellVisualizer() {
   const [targetWeight, setTargetWeight] = useState('');
   const [plateSetup, setPlateSetup] = useState<Plate[]>([]);
 
   const calculatePlates = (totalWeight: string) => {
     const total = parseFloat(totalWeight);
-    if (isNaN(total) || total < BAR_WEIGHT + 2 * COLLAR_WEIGHT) {
+    const fixedWeight = BAR_WEIGHT + 2 * COLLAR_WEIGHT;
+
+    if (isNaN(total) || total < fixedWeight) {
       setPlateSetup([]);
       return;
     }
 
-    const sideWeight = (total - BAR_WEIGHT - 2 * COLLAR_WEIGHT) / 2;
+    const sideWeight = (total - fixedWeight) / 2;
     let remaining = sideWeight;
     const result: Plate[] = [];
 
@@ -63,6 +69,32 @@ export default function BarbellVisualizer() {
     setPlateSetup(result);
   };
 
+  const renderPlates = (side: 'left' | 'right') => {
+    const plateViews = plateSetup.map((plate, index) =>
+      Array.from({ length: plate.count }).map((_, i) => (
+        <Animated.Image
+          key={`${side}-${plate.weight}-${i}`}
+          source={plate.image}
+          resizeMode="contain"
+          style={[styles.plateImage, { zIndex: 100 - index * 2 - i }]}
+        />
+      ))
+    );
+
+    const collar = (
+      <Animated.Image
+        key={`${side}-collar`}
+        source={COLLAR_IMAGE}
+        resizeMode="contain"
+        style={[styles.plateImage, { zIndex: 1 }]}
+      />
+    );
+
+    return side === 'left'
+      ? [...plateViews.flat(), collar]
+      : [collar, ...plateViews.flat()];
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Barbell Plate Visualizer</Text>
@@ -78,39 +110,14 @@ export default function BarbellVisualizer() {
       />
 
       <View style={styles.barbellContainer}>
-        {/* Left plates */}
-        <View style={styles.plateStack}>
-          {plateSetup.map((plate, index) =>
-            Array.from({ length: plate.count }).map((_, i) => (
-              <Animated.Image
-                key={`l-${plate.weight}-${i}`}
-                source={plate.image}
-                resizeMode="contain"
-                style={[styles.plateImage, { zIndex: 100 - index * 2 - i }]}
-              />
-            ))
-          )}
-        </View>
+        {/* Left side */}
+        <View style={styles.plateStackLeft}>{renderPlates('left')}</View>
 
-        {/* Barbell Image */}
-        <Image
-          source={require('../../assets/weights/Barbell.png')}
-          style={styles.barbellImage}
-        />
+        {/* Barbell */}
+        <Image source={BARBELL_IMAGE} style={styles.barbellImage} />
 
-        {/* Right plates */}
-        <View style={styles.plateStack}>
-          {plateSetup.map((plate, index) =>
-            Array.from({ length: plate.count }).map((_, i) => (
-              <Animated.Image
-                key={`r-${plate.weight}-${i}`}
-                source={plate.image}
-                resizeMode="contain"
-                style={[styles.plateImage, { zIndex: 100 - index * 2 - i }]}
-              />
-            ))
-          )}
-        </View>
+        {/* Right side */}
+        <View style={styles.plateStackRight}>{renderPlates('right')}</View>
       </View>
 
       <View style={styles.summary}>
@@ -123,7 +130,7 @@ export default function BarbellVisualizer() {
           kg
         </Text>
         <Text style={styles.summaryText}>
-          Barbell: 20 kg, Collars: 2.5 kg × 2
+          Barbell: 20 kg, Collars: 2.5 kg × 2 (always included)
         </Text>
       </View>
     </ScrollView>
@@ -134,7 +141,7 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     alignItems: 'center',
-    backgroundColor: 'white', // ensure background is clean
+    backgroundColor: 'white',
   },
   header: {
     fontSize: 22,
@@ -155,24 +162,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginVertical: 30,
-    backgroundColor: 'transparent',
   },
   barbellImage: {
     width: SCREEN_WIDTH * 0.4,
     height: 60,
     marginHorizontal: 4,
-    backgroundColor: 'transparent',
   },
-  plateStack: {
+  plateStackLeft: {
     flexDirection: 'row-reverse',
     alignItems: 'center',
-    backgroundColor: 'transparent',
+  },
+  plateStackRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   plateImage: {
     width: 36,
     height: 72,
     marginHorizontal: -4,
-    backgroundColor: 'transparent',
     shadowColor: '#000',
     shadowOffset: { width: 1, height: 3 },
     shadowOpacity: 0.3,
@@ -186,5 +193,6 @@ const styles = StyleSheet.create({
   summaryText: {
     fontSize: 14,
     marginVertical: 3,
+    color: '#000',
   },
 });
