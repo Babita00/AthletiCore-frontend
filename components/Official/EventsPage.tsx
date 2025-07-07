@@ -15,11 +15,14 @@ import {
   Plus,
   Trophy,
   Users,
+  MoreVertical,
 } from "lucide-react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { styles } from "@/styles/eventPageStyle";
 import { useMyEvents } from "@/hooks/useGetMyEvents";
+import DeleteModal from "@/components/ui/DeleteModal";
+import { useDeleteEvent } from "@/hooks/useDeleteEvent";
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
@@ -30,12 +33,16 @@ const formatDate = (dateString: string) => {
   });
 };
 
-
 export default function EventsPage() {
   const { data: events = [] } = useMyEvents();
+  const { mutate: deleteEvent } = useDeleteEvent();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedFilter, setSelectedFilter] = useState("all");
+
+  // Which event is currently targeted for delete or edit
+  const [menuEventId, setMenuEventId] = useState<string | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const filteredEvents = events.filter((event) => {
     const matchesSearch =
@@ -53,6 +60,25 @@ export default function EventsPage() {
 
   const handleCreateEvent = () => {
     router.push(`./event/createEvent`);
+  };
+
+  const openMenu = (id: string) => {
+    setMenuEventId(id);
+  };
+
+  const onEdit = () => {
+    if (menuEventId) router.push(`./event/${menuEventId}/edit`);
+    setMenuEventId(null);
+  };
+
+  const onDelete = () => {
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = () => {
+    if (menuEventId) deleteEvent(menuEventId);
+    setShowDeleteModal(false);
+    setMenuEventId(null);
   };
 
   return (
@@ -95,7 +121,7 @@ export default function EventsPage() {
           showsHorizontalScrollIndicator={false}
           style={styles.filterTabs}
         >
-          {["all", "open", "male", "female"].map((filter) => (
+          {['all', 'open', 'male', 'female'].map((filter) => (
             <TouchableOpacity
               key={filter}
               style={[
@@ -123,84 +149,65 @@ export default function EventsPage() {
         showsVerticalScrollIndicator={false}
       >
         {filteredEvents.map((event) => (
-          <TouchableOpacity
-            key={event._id}
-            style={styles.eventCard}
-            onPress={() => handleEventPress(event._id)}
-            activeOpacity={0.7}
-          >
-            <Image
-              source={{ uri: event.eventImage }}
-              style={styles.eventImage}
-            />
+          <View key={event._id} style={styles.eventCardWrapper}>
+            <TouchableOpacity
+              style={styles.eventCard}
+              onPress={() => handleEventPress(event._id)}
+              activeOpacity={0.7}
+            >
+              <Image
+                source={{ uri: event.eventImage }}
+                style={styles.eventImage}
+              />
 
-            <View style={styles.eventContent}>
-              <View style={styles.eventHeader}>
-                <View style={styles.eventBadge}>
-                  <Text style={styles.eventBadgeText}>
-                    {event.competitionType}
-                  </Text>
+              <View style={styles.eventContent}>
+                {/* 3‑dot menu trigger */}
+                <TouchableOpacity
+                  style={styles.menuButton}
+                  onPress={() => openMenu(event._id)}
+                >
+                  <MoreVertical size={20} color="#6B7280" />
+                </TouchableOpacity>
+
+                <View style={styles.eventHeader}>
+                  <View style={styles.eventBadge}>
+                    <Text style={styles.eventBadgeText}>
+                      {event.competitionType}
+                    </Text>
+                  </View>
+                </View>
+
+                <Text style={styles.eventTitle}>{event.title}</Text>
+
+                <View style={styles.eventDetails}>...
+                </View>
+
+                <Text
+                  style={styles.eventDescription}
+                  numberOfLines={2}
+                >
+                  {event.description}
+                </Text>
+
+                <View style={styles.eventFooter}>...
                 </View>
               </View>
-
-              <Text style={styles.eventTitle}>{event.title}</Text>
-
-              <View style={styles.eventDetails}>
-                <View style={styles.eventDetailItem}>
-                  <MapPin size={16} color="#6B7280" />
-                  <Text style={styles.eventDetailText}>{event.venue}</Text>
-                </View>
-
-                <View style={styles.eventDetailItem}>
-                  <Calendar size={16} color="#6B7280" />
-                  <Text style={styles.eventDetailText}>
-                    {formatDate(event.date)}
-                  </Text>
-                </View>
-
-                {/* <View style={styles.eventDetailItem}>
-                  <Users size={16} color="#6B7280" />
-                  <Text style={styles.eventDetailText}>
-                    {event.participants} participants
-                  </Text>
-                </View> */}
-              </View>
-
-              <Text style={styles.eventDescription} numberOfLines={2}>
-                {event.description}
-              </Text>
-
-              <View style={styles.eventFooter}>
-                <View style={styles.prizeInfo}>
-                  <Trophy size={16} color="#F59E0B" />
-                  <Text style={styles.prizeText}>
-                    {event.prizes.length} prize
-                    {event.prizes.length !== 1 ? "s" : ""} available
-                  </Text>
-                </View>
-
-                <View style={styles.categoriesPreview}>
-                  <Text style={styles.categoriesText}>
-                    {event.weightCategories.length} categories
-                  </Text>
-                </View>
-              </View>
-            </View>
-          </TouchableOpacity>
+            </TouchableOpacity>
+          </View>
         ))}
 
-        {filteredEvents.length === 0 && (
-          <View style={styles.emptyState}>
-            <Calendar size={48} color="#9CA3AF" />
-            <Text style={styles.emptyStateTitle}>No events found</Text>
-            <Text style={styles.emptyStateText}>
-              Try adjusting your search or filter criteria
-            </Text>
-          </View>
-        )}
-
-        <View style={styles.bottomSpacing} />
+        {/* No events state & spacing */}
       </ScrollView>
+
+      {/* Delete Modal */}
+      {menuEventId && (
+        <DeleteModal
+          visible={showDeleteModal}
+          title="Event"
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDelete}
+        />
+      )}
     </SafeAreaView>
   );
 }

@@ -33,3 +33,7 @@ export const getEventByIdAPI = async (id: string) => {
     method: "GET",
   });
 };
+
+//Export deleteEventAPI
+export const deleteEventAPI = (eventId: string) =>
+  baseFetcher<void>(`/events/${eventId}`, { method: "DELETE" });
