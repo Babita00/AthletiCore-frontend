@@ -240,7 +240,7 @@ const AttemptsPage = () => {
           }));
           setShowConfirmDialog(false);
           setPendingSubmission(null);
-          Alert.alert("Success", "Attempt submitted successfully.");
+          Alert.alert("Success", "Weight updated successfully.");
         },
         onError: (error: any) => {
           console.error("Failed to submit weight:", error);

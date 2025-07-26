@@ -50,25 +50,25 @@ const AttemptCard: React.FC<AttemptCardProps> = ({
   const getStatusColor = () => {
     if (attempt.result === "success") return "#10b981";
     if (attempt.result === "failed") return "#ef4444";
-    if (attempt.status === "submitted") return "#f59e0b";
+    if (attempt.weight > 0) return "#f59e0b";
     return "#6b7280";
   };
 
   const getStatusText = () => {
     if (attempt.result === "success") return "Passed";
     if (attempt.result === "failed") return "Failed";
-    if (attempt.status === "submitted") return "Awaiting Review";
-    return "Not Submitted";
+    if (attempt.weight > 0) return "Ready for Review";
+    return "No Weight Set";
   };
 
   const getStatusIcon = () => {
     if (attempt.result === "success") return <CheckCircle size={20} color="#10b981" />;
     if (attempt.result === "failed") return <XCircle size={20} color="#ef4444" />;
-    if (attempt.status === "submitted") return <Clock size={20} color="#f59e0b" />;
+    if (attempt.weight > 0) return <Clock size={20} color="#f59e0b" />;
     return <Clock size={20} color="#6b7280" />;
   };
 
-  const canUpdateStatus = attempt.status === "submitted" && !attempt.result && attempt.id;
+  const canUpdateStatus = attempt.weight > 0 && !attempt.result && attempt.id;
 
   return (
     <View style={styles.attemptCard}>
@@ -230,8 +230,7 @@ export default function RegistrationDetailScreen() {
     refetch: refetchAttempts,
   } = useGetLiftAttempt(userId, eventId as string);
 
-  // FRONTEND WORKAROUND: Extract initial weights from registration form
-  // TODO: Backend should initialize Attempt 1 as "submitted" with initial weights
+  // Extract initial weights from registration form
   const getInitialWeight = (liftType: LiftType) => {
     if (!registrationData?.submission?.formFields) return 0;
     
@@ -247,7 +246,7 @@ export default function RegistrationDetailScreen() {
     return field ? parseFloat(field.value) || 0 : 0;
   };
 
-  // Enhance attempts data with initial weights and correct status
+  // Enhance attempts data with initial weights from registration
   const enhancedAttemptsData = React.useMemo(() => {
     if (!attemptsData) return null;
     
@@ -257,12 +256,11 @@ export default function RegistrationDetailScreen() {
       if (enhanced[liftType] && enhanced[liftType][0]) {
         const initialWeight = getInitialWeight(liftType);
         
-        // Update Attempt 1 with initial weight and submitted status
+        // Update Attempt 1 with initial weight from registration
         enhanced[liftType][0] = {
           ...enhanced[liftType][0],
           weight: initialWeight,
-          status: 'submitted' as const,
-          result: null, // Awaiting official review
+          // No status changes - simplified approach
         };
       }
     });
@@ -315,7 +313,7 @@ export default function RegistrationDetailScreen() {
   const getPendingAttemptsCount = () => {
     if (!enhancedAttemptsData) return 0;
     return Object.values(enhancedAttemptsData).flat().filter(
-      attempt => attempt.status === "submitted" && !attempt.result
+      attempt => attempt.weight > 0 && !attempt.result
     ).length;
   };
 
