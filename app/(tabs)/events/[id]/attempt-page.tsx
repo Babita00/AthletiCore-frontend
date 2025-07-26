@@ -138,15 +138,9 @@ const AttemptsPage = () => {
   
   // Debug: Log the attempts to see their status and locked properties
   useEffect(() => {
-    // Use same logic as rendering
-    const hasLocalChanges = Object.values(localAttempts).some(attempts => 
-      attempts.some(attempt => attempt.weight > 0)
-    );
-    const currentAttempts = hasLocalChanges ? localAttempts : (enhancedAttemptsData || localAttempts);
-    
-    if (currentAttempts && currentAttempts[activeTab]) {
-      console.log(`🔍 ${activeTab} attempts:`, currentAttempts[activeTab]);
-      currentAttempts[activeTab].forEach((attempt, index) => {
+    if (localAttempts && localAttempts[activeTab]) {
+      console.log(`🔍 ${activeTab} attempts:`, localAttempts[activeTab]);
+      localAttempts[activeTab].forEach((attempt, index) => {
         const isLocked = (attempt.round === 1 || attempt.locked || attempt.status === "submitted");
         console.log(`🎯 Attempt ${attempt.round}:`, {
           weight: attempt.weight,
@@ -162,12 +156,10 @@ const AttemptsPage = () => {
             : 'not locked'
         });
       });
-      
-      // Also log which data source we're using
-      console.log(`📊 Data source: ${hasLocalChanges ? 'localAttempts (with changes)' : (enhancedAttemptsData ? 'enhancedAttemptsData' : 'localAttempts')}`);
     }
-  }, [enhancedAttemptsData, localAttempts, activeTab]);
+  }, [localAttempts, activeTab]);
 
+  // ✅ NEW APPROACH: Set localAttempts from enhanced data when both are ready
   useEffect(() => {
     if (!userId || !eventId) return;
 
@@ -175,23 +167,11 @@ const AttemptsPage = () => {
     if (!attemptsData) {
       setIsInitializing(true);
       initializeAttempts(
-        { eventId: eventId as string }, // ✅ Only pass eventId now
+        { eventId: eventId as string },
         {
           onSuccess: (res) => {
-            // Fix: Ensure attempts 2 and 3 are unlocked and available
-            const fixedAttempts = Object.keys(res).reduce((acc, liftType) => {
-              acc[liftType as LiftType] = res[liftType as LiftType].map((attempt) => ({
-                ...attempt,
-                // Only attempt 1 should be locked if it has been submitted
-                locked: attempt.round === 1 ? attempt.locked : false,
-                // Attempts 2 and 3 should be available unless already submitted
-                status: attempt.round === 1 ? attempt.status : 
-                        (attempt.status === "submitted" ? "submitted" : "available")
-              }));
-              return acc;
-            }, {} as Record<LiftType, Attempt[]>);
-            
-            setLocalAttempts(fixedAttempts);
+            console.log("🔄 Initialized attempts from backend");
+            // Don't set localAttempts here - let enhanced data handle it
             setIsInitializing(false);
           },
           onError: () => {
@@ -200,23 +180,17 @@ const AttemptsPage = () => {
           },
         }
       );
-    } else {
-      // Fix: Ensure attempts 2 and 3 are unlocked and available for fetched data too
-      const fixedAttempts = Object.keys(attemptsData).reduce((acc, liftType) => {
-        acc[liftType as LiftType] = attemptsData[liftType as LiftType].map((attempt) => ({
-          ...attempt,
-          // Only attempt 1 should be locked if it has been submitted
-          locked: attempt.round === 1 ? attempt.locked : false,
-          // Attempts 2 and 3 should be available unless already submitted
-          status: attempt.round === 1 ? attempt.status : 
-                  (attempt.status === "submitted" ? "submitted" : "available")
-        }));
-        return acc;
-      }, {} as Record<LiftType, Attempt[]>);
-      
-      setLocalAttempts(fixedAttempts); // Use the fixed attempts data
     }
   }, [userId, eventId, attemptsData, initializeAttempts]);
+
+  // ✅ SEPARATE EFFECT: Set localAttempts from enhanced data when available
+  useEffect(() => {
+    if (enhancedAttemptsData && Object.values(localAttempts).every(attempts => attempts.length === 0)) {
+      console.log("🎯 Setting localAttempts from enhanced data (with initial weights)");
+      console.log("Enhanced data preview:", enhancedAttemptsData);
+      setLocalAttempts(enhancedAttemptsData);
+    }
+  }, [enhancedAttemptsData, localAttempts]);
 
   const handleWeightChange = (
     lift: LiftType,
@@ -252,13 +226,7 @@ const AttemptsPage = () => {
   };
 
   const handleSubmit = (lift: LiftType, round: number) => {
-    // Use same logic as rendering: localAttempts if changes made, otherwise enhanced data
-    const hasLocalChanges = Object.values(localAttempts).some(attempts => 
-      attempts.some(attempt => attempt.weight > 0)
-    );
-    const currentAttempts = hasLocalChanges ? localAttempts : (enhancedAttemptsData || localAttempts);
-    
-    const attempt = currentAttempts[lift].find((a) => a.round === round);
+    const attempt = localAttempts[lift].find((a) => a.round === round);
     console.log(`🚀 Submit attempt ${round} for ${lift}:`, attempt);
     
     if (attempt) {
@@ -368,17 +336,12 @@ const AttemptsPage = () => {
           <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
             <View style={styles.attemptsContainer}>
               {(() => {
-                // IMPORTANT: Use localAttempts if any weights have been changed,
-                // otherwise use enhanced data for initial state
-                const hasLocalChanges = Object.values(localAttempts).some(attempts => 
-                  attempts.some(attempt => attempt.weight > 0)
-                );
+                // ✅ SIMPLIFIED: Use localAttempts (now properly initialized with enhanced data)
+                const currentAttempts = localAttempts;
                 
-                const currentAttempts = hasLocalChanges ? localAttempts : (enhancedAttemptsData || localAttempts);
+                console.log(`🎮 Rendering with localAttempts for ${activeTab}:`, currentAttempts[activeTab]);
                 
-                console.log(`🎮 Rendering with: ${hasLocalChanges ? 'localAttempts (with changes)' : 'enhancedAttemptsData (initial)'}`);
-                
-                if (currentAttempts[activeTab].length === 0) {
+                if (!currentAttempts[activeTab] || currentAttempts[activeTab].length === 0) {
                   return (
                     <Text
                       style={{
