@@ -170,9 +170,9 @@ export default function GetAllPlayerRegistration() {
     return (
       <TouchableOpacity
         style={styles.tableRow}
-        // onPress={() =>
-        //   router.push(`/(official)/event/${eventId}/registration/${item._id}`)
-        // }
+        onPress={() =>
+          router.push(`/(official)/event/${eventId}/registration/${item._id}`)
+        }
       >
         <View style={[styles.cell, styles.nameColumn]}>
           <Text style={styles.cardDetail}>{name}</Text>

@@ -20,52 +20,52 @@ import { useCreateEventForm } from "@/hooks/useCreateEventForm";
 
 const staticFields: IFormField[] = [
   {
-    id: "full-name",
-    fieldName: "Full Name",
-    fieldType: "text",
+    id: 'full-name',
+    fieldName: 'Full Name',
+    fieldType: 'text',
     required: true,
     options: [],
-    key: "fullName",
+    key: 'fullName',
   },
   {
-    id: "static-age",
-    fieldName: "Age",
-    fieldType: "number",
+    id: 'static-age',
+    fieldName: 'Age',
+    fieldType: 'number',
     required: true,
     options: [],
-    key: "age",
+    key: 'age',
   },
   {
-    id: "static-body-weight",
-    fieldName: "Body Weight",
-    fieldType: "number",
+    id: 'static-body-weight',
+    fieldName: 'Body Weight',
+    fieldType: 'number',
     required: true,
     options: [],
-    key: "bodyWeight",
+    key: 'bodyWeight',
   },
   {
-    id: "static-initial-weight-for-squat",
-    fieldName: "Initial Weight For Squat",
-    fieldType: "number",
+    id: 'static-initial-weight-for-squat',
+    fieldName: 'Initial Weight For Squat',
+    fieldType: 'number',
     required: true,
     options: [],
-    key: "initialWeightForSquat", 
+    key: 'static-initial-weight-for-squat', // ✅ Fixed to match backend
   },
   {
-    id: "static-initial-weight-for-bench-press",
-    fieldName: "Initial Weight For Bench Press",
-    fieldType: "number",
+    id: 'static-initial-weight-for-bench-press',
+    fieldName: 'Initial Weight For Bench Press',
+    fieldType: 'number',
     required: true,
     options: [],
-    key: "initialWeightforSquatBenchPress", 
+    key: 'static-initial-weight-for-bench-press', // ✅ Fixed to match backend
   },
   {
-    id: "static-initial-weight-for-deadlift",
-    fieldName: "Initial Weight For Bench Press",
-    fieldType: "number",
+    id: 'static-initial-weight-for-deadlift',
+    fieldName: 'Initial Weight For Deadlift', // ✅ Fixed field name
+    fieldType: 'number',
     required: true,
     options: [],
-    key: "initialWeightforSquatBenchPress", 
+    key: 'static-initial-weight-for-deadlift', // ✅ Fixed key and made unique
   },
 ];
 

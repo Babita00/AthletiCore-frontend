@@ -4,6 +4,7 @@ export type AttemptResult = "success" | "failed" | null;
 export type LiftType = "squat" | "bench" | "deadlift";
 
 export interface Attempt {
+  id?: string; // Backend attempt ID for API calls
   round: number;
   weight: number;
   status: AttemptStatus;

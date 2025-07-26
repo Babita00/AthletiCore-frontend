@@ -140,12 +140,7 @@ export default function EventRegistrationFormScreen() {
         },
         {
           onSuccess: () => {
-            Alert.alert("Success", "Registration submitted!", [
-              {
-                text: "OK",
-                onPress: () => setTimeout(() => router.back(), 300),
-              },
-            ]);
+            router.back();
           },
           onError: (error: any) => {
             Alert.alert(

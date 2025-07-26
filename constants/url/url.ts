@@ -29,6 +29,8 @@ export const GET_MY_EVENT_REGISTRATION_FORM_URL =
 export const INITIALIZE_ATTEMPTS = "/attempt/init-lifts";
 // constants/url/liftAttemptUrls.ts
 export const GET_LIFT_ATTEMPTS_URL = "/attempt";
+export const SUBMIT_NEXT_WEIGHT_URL = "/attempt/:attemptId/submit-weight";
+export const UPDATE_LIFT_STATUS_URL = "/attempt/:attemptId/update-status";
 
 //
 export const GET_LIVE_SCOREBOARD_URL = "/live-scoreboard/live/:eventId";

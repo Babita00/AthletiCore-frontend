@@ -60,7 +60,7 @@ export default function EventDetailScreen() {
   };
 
   const handleViewRegistation = (id: string) => {
-  console.log("Event ID passed to handler:", id); // Debug line
+  // console.log("Event ID passed to handler:", id); // Debug line
   router.push(`/(official)/event/${id}/submissions`);
 };
 
