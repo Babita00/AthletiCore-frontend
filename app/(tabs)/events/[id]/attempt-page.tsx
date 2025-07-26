@@ -93,26 +93,43 @@ const AttemptsPage = () => {
     const field = eventSubmission.formFields.find(
       (f) => f.key === keyMap[liftType]
     );
-    return field ? parseFloat(field.value) || 0 : 0;
+    const weight = field ? parseFloat(field.value) || 0 : 0;
+    
+    // Debug logging to see what's happening
+    console.log(`🏋️ Initial weight for ${liftType}:`, {
+      foundField: !!field,
+      fieldKey: field?.key,
+      fieldValue: field?.value,
+      parsedWeight: weight,
+      allFields: eventSubmission.formFields.map(f => ({ key: f.key, value: f.value }))
+    });
+    
+    return weight;
   };
 
-  // Enhance attempts data with initial weights for Attempt 1
+  // Enhance attempts data with initial weights for Attempt 1 AND unlock attempts 2 & 3
   const enhancedAttemptsData = useMemo(() => {
     if (!attemptsData || !submissionData) return attemptsData;
     
     const enhanced = { ...attemptsData };
     
     (['squat', 'bench', 'deadlift'] as LiftType[]).forEach(liftType => {
-      if (enhanced[liftType] && enhanced[liftType][0]) {
-        const initialWeight = getInitialWeight(liftType);
-        
-        // Pre-populate Attempt 1 with initial weight from registration
-        enhanced[liftType][0] = {
-          ...enhanced[liftType][0],
-          weight: initialWeight,
-          // Don't change the status - let players submit when ready
-          // Note: This weight comes from the registration form
-        };
+      if (enhanced[liftType]) {
+        // NEW LOGIC: Process all attempts
+        enhanced[liftType] = enhanced[liftType].map((attempt) => {
+          if (attempt.round === 1) {
+            // Pre-populate Attempt 1 with initial weight
+            const initialWeight = getInitialWeight(liftType);
+            return { ...attempt, weight: initialWeight };
+          } else {
+            // ✅ FIX: Force unlock attempts 2 and 3
+            return {
+              ...attempt,
+              locked: false, // Explicitly unlock
+              status: attempt.status === "submitted" ? "submitted" : "available"
+            };
+          }
+        });
       }
     });
     
@@ -121,18 +138,33 @@ const AttemptsPage = () => {
   
   // Debug: Log the attempts to see their status and locked properties
   useEffect(() => {
-    const currentAttempts = enhancedAttemptsData || localAttempts;
+    // Use same logic as rendering
+    const hasLocalChanges = Object.values(localAttempts).some(attempts => 
+      attempts.some(attempt => attempt.weight > 0)
+    );
+    const currentAttempts = hasLocalChanges ? localAttempts : (enhancedAttemptsData || localAttempts);
+    
     if (currentAttempts && currentAttempts[activeTab]) {
-      console.log(`${activeTab} attempts:`, currentAttempts[activeTab]);
+      console.log(`🔍 ${activeTab} attempts:`, currentAttempts[activeTab]);
       currentAttempts[activeTab].forEach((attempt, index) => {
-        console.log(`Attempt ${attempt.round}:`, {
+        const isLocked = (attempt.round === 1 || attempt.locked || attempt.status === "submitted");
+        console.log(`🎯 Attempt ${attempt.round}:`, {
           weight: attempt.weight,
           status: attempt.status,
           locked: attempt.locked,
           changes: attempt.changes,
-          isLocked: (attempt.round === 1 || attempt.locked || attempt.status === "submitted")
+          isLocked: isLocked,
+          hasId: !!attempt.id,
+          reason: isLocked ? 
+            attempt.round === 1 ? 'isAttemptOne' : 
+            attempt.locked ? 'attempt.locked' : 
+            attempt.status === "submitted" ? 'status=submitted' : 'unknown'
+            : 'not locked'
         });
       });
+      
+      // Also log which data source we're using
+      console.log(`📊 Data source: ${hasLocalChanges ? 'localAttempts (with changes)' : (enhancedAttemptsData ? 'enhancedAttemptsData' : 'localAttempts')}`);
     }
   }, [enhancedAttemptsData, localAttempts, activeTab]);
 
@@ -191,22 +223,44 @@ const AttemptsPage = () => {
     round: number,
     weight: string
   ) => {
+    console.log(`⚡ Weight change: ${lift} attempt ${round} -> ${weight}`);
+    
     setLocalAttempts((prev) => {
       // Start with enhanced data if available, otherwise use previous state
       const baseAttempts = enhancedAttemptsData || prev;
-      return {
+      const newAttempts = {
         ...baseAttempts,
-        [lift]: baseAttempts[lift].map((a) =>
-          a.round === round ? { ...a, weight: parseFloat(weight) || 0 } : a
-        ),
+        [lift]: baseAttempts[lift].map((a) => {
+          if (a.round === round) {
+            // Update the weight for the specific attempt
+            return { ...a, weight: parseFloat(weight) || 0 };
+          } else if (a.round > 1) {
+            // ✅ ENSURE: Keep attempts 2 & 3 unlocked during weight changes
+            return { 
+              ...a, 
+              locked: false,
+              status: a.status === "submitted" ? "submitted" : "available"
+            };
+          }
+          return a;
+        }),
       };
+      
+      console.log(`✅ Updated attempts for ${lift}:`, newAttempts[lift]);
+      return newAttempts;
     });
   };
 
   const handleSubmit = (lift: LiftType, round: number) => {
-    // Use enhanced data if available, otherwise use local attempts
-    const currentAttempts = enhancedAttemptsData || localAttempts;
+    // Use same logic as rendering: localAttempts if changes made, otherwise enhanced data
+    const hasLocalChanges = Object.values(localAttempts).some(attempts => 
+      attempts.some(attempt => attempt.weight > 0)
+    );
+    const currentAttempts = hasLocalChanges ? localAttempts : (enhancedAttemptsData || localAttempts);
+    
     const attempt = currentAttempts[lift].find((a) => a.round === round);
+    console.log(`🚀 Submit attempt ${round} for ${lift}:`, attempt);
+    
     if (attempt) {
       setPendingSubmission({ lift, round, weight: attempt.weight });
       setShowConfirmDialog(true);
@@ -314,8 +368,15 @@ const AttemptsPage = () => {
           <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
             <View style={styles.attemptsContainer}>
               {(() => {
-                // Use enhanced data if available, otherwise use local attempts
-                const currentAttempts = enhancedAttemptsData || localAttempts;
+                // IMPORTANT: Use localAttempts if any weights have been changed,
+                // otherwise use enhanced data for initial state
+                const hasLocalChanges = Object.values(localAttempts).some(attempts => 
+                  attempts.some(attempt => attempt.weight > 0)
+                );
+                
+                const currentAttempts = hasLocalChanges ? localAttempts : (enhancedAttemptsData || localAttempts);
+                
+                console.log(`🎮 Rendering with: ${hasLocalChanges ? 'localAttempts (with changes)' : 'enhancedAttemptsData (initial)'}`);
                 
                 if (currentAttempts[activeTab].length === 0) {
                   return (

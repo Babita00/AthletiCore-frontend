@@ -286,12 +286,12 @@ export default function RegistrationDetailScreen() {
 
     updateAttemptStatus(
       { attemptId: selectedAttempt.attempt.id!, status },
-             {
-         onSuccess: () => {
+      {
+        onSuccess: () => {
            refetchAttempts();
-           queryClient.invalidateQueries({
-             queryKey: ["submission-detail", eventId, registrationId],
-           });
+          queryClient.invalidateQueries({
+            queryKey: ["submission-detail", eventId, registrationId],
+          });
            setSelectedAttempt(null);
            Alert.alert(
              "Success",
@@ -321,7 +321,7 @@ export default function RegistrationDetailScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#2563EB" />
+        <ActivityIndicator size="large" color="#2563EB" />
           <Text style={styles.loadingText}>Loading registration details...</Text>
         </View>
       </SafeAreaView>
@@ -335,7 +335,7 @@ export default function RegistrationDetailScreen() {
           <Text style={styles.errorText}>Registration not found</Text>
           <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
             <Text style={styles.backButtonText}>Go Back</Text>
-          </TouchableOpacity>
+        </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -344,15 +344,15 @@ export default function RegistrationDetailScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {/* Header */}
-      <View style={styles.header}>
+        <View style={styles.header}>
         <TouchableOpacity style={styles.backIcon} onPress={() => router.back()}>
           <ArrowLeft size={24} color="#1f2937" />
-        </TouchableOpacity>
+          </TouchableOpacity>
         <Text style={styles.headerTitle}>Lift Attempts Review</Text>
         <View style={styles.headerBadge}>
           <Text style={styles.badgeText}>{getPendingAttemptsCount()} pending</Text>
         </View>
-      </View>
+        </View>
 
              {/* User Info */}
        <View style={styles.userInfoCard}>
@@ -374,15 +374,15 @@ export default function RegistrationDetailScreen() {
            </Text>
            <Text style={styles.registrationIdText}>
              ID: {registrationId}
-           </Text>
-         </View>
-       </View>
+                  </Text>
+              </View>
+          </View>
 
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         {/* Lift Type Tabs */}
         <View style={styles.tabContainer}>
           {(["squat", "bench", "deadlift"] as LiftType[]).map((liftType) => (
-            <TouchableOpacity
+                <TouchableOpacity
               key={liftType}
               style={[
                 styles.tab,
@@ -398,7 +398,7 @@ export default function RegistrationDetailScreen() {
               >
                 {liftType.charAt(0).toUpperCase() + liftType.slice(1)}
               </Text>
-            </TouchableOpacity>
+              </TouchableOpacity>
           ))}
         </View>
 
@@ -412,12 +412,12 @@ export default function RegistrationDetailScreen() {
            ) : attemptsError ? (
              <View style={styles.errorContainer}>
                <Text style={styles.errorText}>Failed to load attempts</Text>
-               <TouchableOpacity 
+              <TouchableOpacity
                  style={styles.retryButton} 
                  onPress={() => refetchAttempts()}
-               >
+              >
                  <Text style={styles.retryButtonText}>Retry</Text>
-               </TouchableOpacity>
+              </TouchableOpacity>
              </View>
            ) : enhancedAttemptsData?.[activeLiftTab]?.length === 0 ? (
              <View style={styles.emptyContainer}>
@@ -433,9 +433,9 @@ export default function RegistrationDetailScreen() {
                  isUpdating={isUpdatingStatus}
                />
              ))
-           )}
-         </View>
-      </ScrollView>
+            )}
+          </View>
+        </ScrollView>
 
       {/* Status Update Modal */}
       <StatusModal
